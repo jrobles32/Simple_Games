@@ -68,7 +68,7 @@ def input_logic(table):
 
 def ai_logic(table):
     """
-    Finds best possible location to replace '-' in table list with an 'O'. Returns an updated table list and prints a
+    Finds the best possible location to replace '-' in table list with an 'O'. Returns an updated table list and prints a
     display of it.
 
     Parameters:
