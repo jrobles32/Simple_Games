@@ -21,7 +21,7 @@ def adding_new_images(image_label, image_directory, features_data, label_data):
     return features_data, label_data
 
 
-path = r'C:\Users\Javier\AppData\Roaming\JetBrains\PyCharmCE2021.3\scratches\Digits\digits'
+path = r'C:\Users\Javier\AppData\Roaming\JetBrains\PyCharmCE2021.3\scratches\Digits'
 
 
 mnist = tf.keras.datasets.mnist
