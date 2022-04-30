@@ -14,6 +14,7 @@ class StartDriver:
     """
     An object that represents a Chrome browser.
     """
+
     def __init__(self):
         """
         Establishing the path of browser and adding extensions
@@ -33,7 +34,7 @@ class StartDriver:
 
         :param site_url: website user wants to visit
         :type site_url: str
-        :return: update web location
+        :return: updated web location
         """
         self.driver.get(site_url)
         return self
@@ -48,14 +49,34 @@ class StartDriver:
 
 
 def display_numbers(image, numbers, color=(0, 255, 0)):
+    """
+    Places a digit in a specific area of an image. Values of zero will be ignored and given an empty space.
+
+    :param image: Desired image to overlay digits on.
+    :type image: src
+    :param numbers: Digits to be displayed on image.
+    :type numbers: list
+    :param color: Decimal code for desired color of digits to be displayed. Default color is green.
+    :return: Original image with desired digits put on image.
+    """
+    # Creating the dimensions that each digit will take up in the image.
     sec_w = int(image.shape[1] / 9)
     sec_h = int(image.shape[0] / 9)
-    for x in range(0, 9):
-        for y in range(0, 9):
-            if numbers[(y * 9) + x] != 0:
-                cv.putText(image, str(numbers[(y * 9) + x]),
-                           (x * sec_w + int(sec_w / 2) - 10, int((y + 0.8) * sec_h)),
-                           cv.FONT_HERSHEY_COMPLEX_SMALL, 2, color, 2, cv.LINE_AA)
+
+    # Looping over Sudoku matrix values
+    for row_idx in range(0, 9):
+        for col_idx in range(0, 9):
+            # Controlling so iterations skip index values that contain zero.
+            if numbers[(col_idx * 9) + row_idx] != 0:
+                # Putting digit on section of image.
+                cv.putText(img=image,
+                           text=str(numbers[(col_idx * 9) + row_idx]),
+                           org=(row_idx * sec_w + int(sec_w / 2) - 10, int((col_idx + 0.8) * sec_h)),
+                           fontFace=cv.FONT_HERSHEY_COMPLEX_SMALL,
+                           fontScale=2,
+                           color=color,
+                           thickness=2,
+                           lineType=cv.LINE_AA)
     return image
 
 
@@ -98,37 +119,84 @@ def prep_box(box, photo=False):
 
 
 def stack_images(scale, img_array):
+    """
+    Takes in multiple images and stacks them horizontally and vertically to create a new image. If images do not share
+    the same dimensions, images are scaled to the dimensions of the first image in the inputted tuple.
+
+    :param scale: Value to enlarge or reduce input images.
+    :type scale: float
+    :param img_array: Tuple of lists containing desired images. The number of lists inside tuple represent how many rows
+        of images the final output will have. The number of images inside a list represent the number of columns. All
+        lists must be of equal length. Input an empty image if length are not the same.
+    :type img_array: any
+    :return: A new image composed of all the images in img_array.
+    """
+    # Finding the total number of rows and columns that will make up the final image.
     rows = len(img_array)
     cols = len(img_array[0])
+
+    # Determining if first variable in tuple is a list or just an image.
     rows_available = isinstance(img_array[0], list)
+
+    # Finding the dimension of the first image in the inputted tuple.
     width = img_array[0][0].shape[1]
     height = img_array[0][0].shape[0]
+
+    # Control that determines if final image will have multiple rows or just one.
     if rows_available:
         for x in range(0, rows):
             for y in range(0, cols):
+
+                # Converting dimensions of current image when they do not match the first. And, applying desired scale.
                 if img_array[x][y].shape[:2] == img_array[0][0].shape[:2]:
-                    img_array[x][y] = cv.resize(img_array[x][y], (0, 0), None, scale, scale)
+                    img_array[x][y] = cv.resize(img_array[x][y],
+                                                dsize=(0, 0),                           # Can be changed to None
+                                                fx=scale,
+                                                fy=scale)
                 else:
-                    img_array[x][y] = cv.resize(img_array[x][y], (img_array[0][0].shape[1], img_array[0][0].shape[0]),
-                                                None, scale, scale)
+                    img_array[x][y] = cv.resize(img_array[x][y],
+                                                dsize=(img_array[0][0].shape[1], img_array[0][0].shape[0]),
+                                                fx=scale,
+                                                fy=scale)
+
+                # Converting black and white images to ensure they contain three color channels.
                 if len(img_array[x][y].shape) == 2:
                     img_array[x][y] = cv.cvtColor(img_array[x][y], cv.COLOR_GRAY2BGR)
+
+        # Creating a list of black images that length is equal to the user desired number of rows.
         image_blank = np.zeros((height, width, 3), np.uint8)
         hor = [image_blank] * rows
+
+        # Replacing black images with a horizontal stack of the images in an element of the inputted tuple.
         for x in range(0, rows):
             hor[x] = np.hstack(img_array[x])
+
+        # Vertically stacking the horizontal stacks of images previously created to develop one image.
         ver = np.vstack(hor)
+
     else:
         for x in range(0, rows):
+
+            # Converting dimensions of current image when they do not match the first. And, applying desired scale.
             if img_array[x].shape[:2] == img_array[0].shape[:2]:
-                img_array[x] = cv.resize(img_array[x], (0, 0), None, scale, scale)
+                img_array[x] = cv.resize(img_array[x],
+                                         dsize=(0, 0),
+                                         fx=scale,
+                                         fy=scale)
             else:
-                img_array[x] = cv.resize(img_array[x], (img_array[0].shape[1], img_array[0].shape[0]), None, scale,
-                                         scale)
+                img_array[x] = cv.resize(img_array[x],
+                                         dsize=(img_array[0].shape[1], img_array[0].shape[0]),
+                                         fx=scale,
+                                         fy=scale)
+
+            # Converting black and white images to ensure they contain three color channels.
             if len(img_array[x].shape) == 2:
                 img_array[x] = cv.cvtColor(img_array[x], cv.COLOR_GRAY2BGR)
+
+        # Horizontally stacking images in the inputted tuple.
         hor = np.hstack(img_array)
         ver = hor
+
     return ver
 
 
@@ -137,7 +205,7 @@ def corrected_points(points):
     Serves to reorganize the input array of a four-sided figure to enable one to do a perspective transformation.
 
     :param points: Vertices of a four sided shape.
-    :type points: array_like
+    :type points: ndarray
     :return: A 3D array with vertex values ordered top left, top right, bottom left, bottom right.
     """
     # Creating a 3D array with values set to zero.
@@ -222,55 +290,105 @@ def bounding_boxes(image):
 
 def available_placements(x, y, test_num, board_values):
     """
-    Determines if
+    Determines if a number between 1 and 9 can be placed at a specific location in the input matrix. In order for number
+    to be placed, all Sudoku rules must be met.
 
-    :param x:
-    :param y:
-    :param test_num:
-    :param board_values:
+    :param x: Desired row index.
+    :type x: int
+    :param y: Desired column index.
+    :type y: int
+    :param test_num: Value between 1 and 9 to be tested.
+    :type test_num: int
+    :param board_values: A 2D Matrix with 9 rows and columns. (Sudoku puzzle)
+    :type board_values: ndarray
+    :return: True if test number can go into a specific location, False otherwise.
+    :rtype: bool
     """
+    # Checking if test_num can already be found in desired row.
     for idx in range(9):
         if board_values[x][idx] == test_num:
             return False
+
+    # Checking if test_num can already be found in desired column.
     for idx in range(9):
         if board_values[idx][y] == test_num:
             return False
 
+    # Creating the 3X3 grid that the desired index coordinate would belong to in the Sudoku puzzle.
     box_x = (x // 3) * 3
     box_y = (y // 3) * 3
+
+    # Checking if test_num can already be found in 3X3 grid.
     for row in range(3):
         for col in range(3):
             if board_values[box_x + row][box_y + col] == test_num:
                 return False
+
     return True
 
 
 def solve_sudoku(sudoku_board):
+    """
+    Solves a Sudoku puzzle using backtracking. The solution is printed in the terminal.
+
+    :param sudoku_board: 2D array with 9 rows and columns.
+    :type sudoku_board: ndarray
+    :return: Array of the solved Sudoku puzzle.
+    :rtype: ndarray
+    """
+    # Looping over Sudoku matrix.
     for row_idx in range(9):
         for col_idx in range(9):
+
+            # Control to only change values that are zero.
             if sudoku_board[row_idx][col_idx] == 0:
                 for test_value in range(1, 10):
+
+                    # Changing the value of zero to test_value if the value can be placed at the desired location.
                     if available_placements(row_idx, col_idx, test_value, sudoku_board):
                         sudoku_board[row_idx][col_idx] = test_value
+
+                        # Performing recursion to see if test_value can lead to a valid solution.
                         if solve_sudoku(sudoku_board) is not None:
                             return sudoku_board
+
+                        # Changing value back to zero if test_value does not reach a solution.
                         sudoku_board[row_idx][col_idx] = 0
+
+                # Returning none if no valid solution is found.
                 return
+
     print('Solution: \n', np.matrix(sudoku_board))
     return sudoku_board
 
 
 def modified_array(nums_scanned, solution_nums):
+    """
+    Determines if a value is shared between two lists at a specific index value. Values that are shared are replaced
+    with zero.
+
+    :param nums_scanned: Sudoku puzzle numbers with zero representing empty spaces.
+    :type nums_scanned: ndarray
+    :param solution_nums: All the numbers for the solution of Sudoku puzzle. No zeros.
+    :type solution_nums: ndarray
+    :return: Only the solution values of the Sudoku puzzle
+    :rtype: list
+    """
+    # Initializing empty list to store values.
     not_shared = []
+
     for idx, value in enumerate(solution_nums):
+
+        # Adding zero if values match. If they do not, adding the value in solution_nums to not_shared.
         if nums_scanned[idx] == solution_nums[idx]:
             not_shared.append(0)
         else:
             not_shared.append(value)
+
     return not_shared
 
 
-def process_image(image, img_width=504, img_height=504,  photo=False, debug=False):
+def process_image(image, img_width=504, img_height=504, photo=False, debug=False):
     """
     Applies image processing steps to prepare sudoku image for the application of a trained model based on mnist
     dataset. The results are used to determine a solution to the puzzle.
@@ -335,9 +453,12 @@ def process_image(image, img_width=504, img_height=504,  photo=False, debug=Fals
         display_num = img_blank.copy()
         img_detected = display_numbers(display_num, nums_found, color=(0, 0, 255))
 
+        # Spitting list with 81 values into 9 different arrays and attempting to solve Sudoku.
         print('Beginning to solve the puzzle....')
         board = np.array_split(nums_found, 9)
         solve_sudoku(board)
+
+        # Flattening the 9 arrays back to one and removing shared values between solution and puzzle numbers.
         solved_board = np.array(board).flatten()
         solved_digits = modified_array(nums_found, solved_board)
 
@@ -349,8 +470,10 @@ def process_image(image, img_width=504, img_height=504,  photo=False, debug=Fals
         paste_results = cv.addWeighted(digits_img, 1, img_warp.copy(), 0.5, 1)
 
         if debug:
+            # Creating an array of images in different steps of puzzle solution to find where an error has occurred.
             img_array = ([image, inverted, img_cont, puzzle], [img_warp, img_detected, digits_img, paste_results])
             img_stack = stack_images(0.5, img_array)
+
             cv.imshow('Sudoku Outline', img_stack)
             cv.waitKey(0)
 
@@ -363,12 +486,12 @@ def process_image(image, img_width=504, img_height=504,  photo=False, debug=Fals
 def digit_recognition(boxes, photo=False):
     """
     Recognizes the value of a digit inside a bounding box. Digit recognition model uses the MNIST dataset with added
-    personal characters.
+    personal characters. Empty images are given a value of zero.
 
     :param boxes: Images that have a digit centralized.
     :param photo: True is original image is a photo, False otherwise.
     :type photo: bool
-    :return: Values of digits inside the image.
+    :return: 81 values recognized in image.
     :rtype: list
     """
     # Loading digit recognition model and creating an empty list to store numbers found
