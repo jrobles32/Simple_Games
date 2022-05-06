@@ -3,8 +3,8 @@ import cv2 as cv
 
 import time
 
-from Simple_Games.sudoku.img_sudoku.process_img import process_image
-from Simple_Games.sudoku.online_sudoku.browser_helpers import sudoku_screenshot
+from sudoku.img_sudoku.process_img import process_image
+from sudoku.online_sudoku.browser_helpers import sudoku_screenshot
 
 
 def change_type(chrome_driver=None):
@@ -78,7 +78,7 @@ def input_photo(input_type, photo_debug=False):
             return processed_input
 
         except AttributeError:
-            print('Not a valid file path. Try again.')
+            print('Not a valid file path. Try again.\n')
             input_photo(input_type)
 
     elif input_type.lower() == 'online':

@@ -1,6 +1,6 @@
 from .img_helpers import *
 from .img_prep import largest_contour, corrected_points, bounding_boxes
-from Simple_Games.sudoku.puzzle_solver.sudoku_solver import solve_sudoku
+from sudoku.puzzle_solver.sudoku_solver import solve_sudoku
 
 
 def process_image(image, img_width=504, img_height=504, photo=False, debug=False):
