@@ -21,7 +21,7 @@ def digit_recognition(boxes, photo=False):
     :rtype: list
     """
     # Loading digit recognition model and creating an empty list to store numbers found
-    model = tf.keras.models.load_model('D:/Trained_Models/new_number_reader.model')
+    model = tf.keras.models.load_model('sudoku/utils/new_number_reader.model')
     nums_found = []
 
     for box in boxes:
