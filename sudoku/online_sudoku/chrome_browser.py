@@ -1,3 +1,5 @@
+from configparser import ConfigParser
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -11,12 +13,15 @@ class StartDriver:
         """
         Establishing the path of browser and adding extensions
         """
-        chrome_path = 'D:/Py_ChromeDriver/chromedriver.exe'
-        ad_ex = 'C:/Users/Javier/AppData/Local/Google/Chrome/User ' \
-                'Data/Default/Extensions/cjpalhdlnbpafiamejdnhcphjbkeiagm/1.42.4_0 '
+        config = ConfigParser()
+        config.read('sudoku/config.ini')
+
+        chrome_path = config['chrome_info']['driver']
+        ad_ex = config['chrome_info']['ad_blocker']
 
         # Adding ad blocker and starting up browser
         chrome_options = Options()
+        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         chrome_options.add_argument('load-extension=' + ad_ex)
         self.driver = webdriver.Chrome(chrome_path, options=chrome_options)
 
