@@ -3,6 +3,17 @@ import numpy as np
 import pyautogui as py
 
 import time
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(levelname)s - %(message)s')
+
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+
+logger.addHandler(stream_handler)
 
 
 def fill_board(solution_values):
@@ -13,7 +24,7 @@ def fill_board(solution_values):
     :type solution_values: ndarray
     :return: None
     """
-    print('\nFilling Board. Do not engage with keyboard!!!')
+    logger.warning('Filling Board. Do not engage with keyboard!!!')
     # Selecting the Chrome driver window and making it the active window
     titles = py.getAllTitles()
     desired_win = [win_name for win_name in titles if 'sudoku puzzles' in win_name][0]
