@@ -1,6 +1,18 @@
+import logging
+
 from .img_helpers import *
 from .img_prep import largest_contour, corrected_points, bounding_boxes
 from sudoku.puzzle_solver.sudoku_solver import solve_sudoku
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(levelname)s - %(message)s')
+
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+
+logger.addHandler(stream_handler)
 
 
 def process_image(image, img_width=504, img_height=504, photo=False, debug=False):
@@ -19,10 +31,9 @@ def process_image(image, img_width=504, img_height=504, photo=False, debug=False
     :type debug: bool
     :return: Original image with solution pasted into boxes and list of values found.
     """
-    print('\nProcessing image....')
-
     # Converting img to grayscale and applying a slight blur to better detect edges
     img_gray = cv.cvtColor(image.copy(), cv.COLOR_BGR2GRAY)
+    logger.info('Processing image')
     img_blur = cv.GaussianBlur(img_gray, (5, 5), 1)
     # Converting pixels based on intensity and inverting the colors of the image
     thresh = cv.adaptiveThreshold(img_blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 2)
@@ -69,7 +80,7 @@ def process_image(image, img_width=504, img_height=504, photo=False, debug=False
         img_detected = display_numbers(display_num, nums_found, color=(0, 0, 255))
 
         # Spitting list with 81 values into 9 different arrays and attempting to solve Sudoku.
-        print('Beginning to solve the puzzle....')
+        logger.info('Beginning to solve the puzzle\n')
         board = np.array_split(nums_found, 9)
         solve_sudoku(board)
 
@@ -89,12 +100,10 @@ def process_image(image, img_width=504, img_height=504, photo=False, debug=False
             img_array = ([image, inverted, img_cont, puzzle], [img_warp, img_detected, digits_img, paste_results])
             img_stack = stack_images(0.5, img_array)
 
-            cv.imshow('Sudoku Outline', img_stack)
-            cv.waitKey(0)
-
-            cv.destroyAllWindows()
-
-        return paste_results, solved_board
+            return img_stack, solved_board
+            
+        else:
+            return paste_results, solved_board
 
     else:
-        print('An error with the image occurred. No contours were found.')
+        logger.error('No contours were found in the image.')
