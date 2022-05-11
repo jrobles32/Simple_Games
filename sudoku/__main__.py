@@ -1,9 +1,31 @@
+import cv2 as cv
+
+import logging
+from configparser import ConfigParser
+
 from online_sudoku.chrome_browser import StartDriver
 from online_sudoku.browser_helpers import fill_board
 from utils.func_controls import change_type, input_photo, play_again
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(levelname)s - %(message)s')
+
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+
+logger.addHandler(stream_handler)
+
+
 def main():
+    # Initalizing debug settings
+    config = ConfigParser()
+    config.read('sudoku/config.ini')
+
+    debug_setting = config['setting'].getboolean('debug')
+
     # Allowing user to run program multiple times.
     outer_continue = True
     while outer_continue:
@@ -17,7 +39,12 @@ def main():
 
             # Allowing user to solve the same type of input multiple times.
             while inner_continue:
-                input_photo(user_format, photo_debug=True)
+                solution_img = input_photo(user_format, photo_debug=debug_setting)
+
+                cv.imshow('Sudoku Outline', solution_img)
+                cv.waitKey(0)
+
+                cv.destroyAllWindows()
 
                 # Determining if user wants to solve another puzzle and/or change the input type.
                 next_game = play_again()
@@ -31,7 +58,7 @@ def main():
                     outer_continue = inner_continue = False
 
         elif user_format.lower() == "online":
-            print('Initializing web sudoku....')
+            logger.info('Initializing web sudoku')
 
             # Setting default website that will be used and starting web driver
             url = 'https://sudoku.com/evil/'
@@ -56,8 +83,7 @@ def main():
                     outer_continue = inner_continue = False
 
         else:
-            print('Not a valid input. Type "photo" if sudoku is a file or type "web" to solve online sudoku.')
-
+            logger.warning(f'{user_format} is not a valid input. Type "photo", "screenshot", or "online".\n')
 
 if __name__ == '__main__':
     main()
