@@ -2,9 +2,21 @@ import pyautogui as py
 import cv2 as cv
 
 import time
+import logging
 
 from sudoku.img_sudoku.process_img import process_image
 from sudoku.online_sudoku.browser_helpers import sudoku_screenshot
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(levelname)s - %(message)s')
+
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+
+logger.addHandler(stream_handler)
 
 
 def change_type(chrome_driver=None):
@@ -15,36 +27,40 @@ def change_type(chrome_driver=None):
     :return: True if a change of type needs to be made, False otherwise.
     :rtype: bool
     """
-    user_cmd = input('Do you want to change the input type? (y/n): ')
-
     # Validating user input depending on input type.
-    if user_cmd.lower() == 'y':
+    repeat = True
+    while repeat:
+        user_cmd = input('Do you want to change the input type? (y/n): ')
 
-        # Closing chrome driver if user wants to change type.
-        if chrome_driver is not None:
-            chrome_driver.quit_chrome()
+        if user_cmd.lower() == 'y':
 
-        return True
+            # Closing chrome driver if user wants to change type.
+            if chrome_driver is not None:
+                chrome_driver.quit_chrome()
 
-    elif user_cmd.lower() == 'n':
+            repeat = False
+            return True
 
-        # Making sudoku browser active window and clicking on a specific area on the screen to start a new sudoku.
-        if chrome_driver is not None:
-            titles = py.getAllTitles()
-            desired_win = [win_name for win_name in titles if 'sudoku puzzles' in win_name][0]
-            sudoku_win = py.getWindowsWithTitle(desired_win)[0]
-            sudoku_win.activate()
+        elif user_cmd.lower() == 'n':
 
-            py.click(x=2000, y=285)
-            py.click(x=1940, y=695)
-            time.sleep(2)
+            # Making sudoku browser active window and clicking on a specific area on the screen to start a new sudoku.
+            if chrome_driver is not None:
+                titles = py.getAllTitles()
+                desired_win = [win_name for win_name in titles if 'sudoku puzzles' in win_name][0]
+                sudoku_win = py.getWindowsWithTitle(desired_win)[0]
+                sudoku_win.activate()
 
-        return False
+                py.click(x=2000, y=285)
+                py.click(x=1940, y=695)
+                time.sleep(2)
 
-    else:
-        print('Not a valid input. Try again.')
-        change_type()
+            repeat = False
+            return False
 
+        else:
+            logger.error(f'{user_cmd} is not a valid input. Try again.\n')
+            repeat = True
+        
 
 def input_photo(input_type, photo_debug=False):
     """
@@ -78,7 +94,7 @@ def input_photo(input_type, photo_debug=False):
             return processed_input
 
         except AttributeError:
-            print('Not a valid file path. Try again.\n')
+            logger.error(f'{file_loc} is not a valid file path. Try again.\n')
             input_photo(input_type)
 
     elif input_type.lower() == 'online':
@@ -91,7 +107,7 @@ def input_photo(input_type, photo_debug=False):
 
     else:
 
-        print(f'{input_type} is not a valid input. Type "photo", "screenshot", or "online" for input_type.')
+        logger.error(f'{input_type} is not a valid input. Type "photo", "screenshot", or "online" for input_type.')
         return None
 
 
@@ -119,4 +135,4 @@ def play_again(chrome_driver=None):
             return False
 
         else:
-            print('Not a valid input! Type in "y" for yes or "n" for no.')
+            logger.error(f'{play} is not a valid input! Type in "y" for yes or "n" for no.')
